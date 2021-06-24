@@ -11,8 +11,7 @@ internal class ComplexTest {
     fun testComplexInitialization() {
         assertFailsWith<IllegalArgumentException> { Complex.complexFromNegativeValue(5) }
         assertFailsWith<IllegalArgumentException> { Complex.complexFromPositiveValue(-5) }
-        val complex = Complex.complexFromPositiveValue(10)
-        assertEquals(complex.data, 10)
-
+        assertEquals(Complex.complexFromPositiveValue(10).data, 10)
+        assertEquals(Complex.complexFromZeroValue().data,0)
     }
 }
