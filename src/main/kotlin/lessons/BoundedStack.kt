@@ -51,6 +51,7 @@ abstract class BoundedStack<T>(val maxElementsCount: Int = 32) {
         stack.clear()
         popStatus = POP_NIL
         peekStatus = PEEK_NIL
+        pushStatus = PUSH_NIL
     }
  
     fun getPeekStatus() = peekStatus
