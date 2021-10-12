@@ -1,15 +1,6 @@
 
 
 abstract class LinkedList<T>() {
-    private var head: Node<T>? = null
-    private var tail: Node<T>? = null
-    private lateinit var cursor: Node<T>
-
-    private var cursorStatus: CursorStatus = CursorStatus.NOT_INITIALIZED
-    private var headStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
-    private var tailStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
-    private var rightStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
-
     enum class CursorStatus {
         NOT_INITIALIZED,
         INITIALIZED
@@ -20,6 +11,15 @@ abstract class LinkedList<T>() {
         ERR,
         NEVER_PERFORMED
     }
+    
+    private var head: Node<T>? = null
+    private var tail: Node<T>? = null
+    private lateinit var cursor: Node<T>
+
+    private var cursorStatus: CursorStatus = CursorStatus.NOT_INITIALIZED
+    private var headStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
+    private var tailStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
+    private var rightStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
 
     // command performs only if head is not null
     fun head() {
