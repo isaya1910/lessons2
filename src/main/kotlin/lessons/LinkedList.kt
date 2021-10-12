@@ -173,5 +173,14 @@ abstract class LinkedList<T>() {
     fun isCursor(): Boolean {
         return cursorStatus != CursorStatus.INITIALIZED
     }
-
+    
+    fun size(): Int {
+        var size = 0
+        var node = head
+        while(node != null){
+            size++
+            node = node.next
+        }
+        return size
+    }
 }
