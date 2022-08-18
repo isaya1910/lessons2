@@ -1,186 +1,72 @@
 
+abstract class LinkedList<T> {
 
-abstract class LinkedList<T>() {
-    enum class CursorStatus {
-        NOT_INITIALIZED,
-        INITIALIZED
-    }
+    // precondition: linked list is not empty
+    // postcondition: cursor was set to head
+    abstract fun head()
 
-    enum class CommandStatus {
-        OK,
-        ERR,
-        NEVER_PERFORMED
-    }
-    
-    private var head: Node<T>? = null
-    private var tail: Node<T>? = null
-    private lateinit var cursor: Node<T>
+    // precondition: linked list is not empty
+    // postcondition: cursor was set to tail
+    abstract fun tail()
 
-    private var cursorStatus: CursorStatus = CursorStatus.NOT_INITIALIZED
-    private var headStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
-    private var tailStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
-    private var rightStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
+    // precondition: cursor is not tail
+    // postcondition: cursor was set to next item
+    abstract fun right()
 
-    // command performs only if head is not null
-    fun head() {
-        head?.let {
-            cursor = it
-            headStatus = CommandStatus.OK
-            return
-        }
-        headStatus = CommandStatus.ERR
-    }
+    // precondition: linked list is not empty
+    // postcondition: new item was added next to cursor
+    abstract fun putRight(item: T)
 
-    // command performs only if tail is not null
-    fun tail() {
-        tail?.let {
-            cursor = it
-            tailStatus = CommandStatus.OK
-            return
-        }
-        tailStatus = CommandStatus.ERR
-    }
+    // precondition: linked list is not empty
+    // postcondition: new item was added  before cursor
+    abstract fun putLeft(item: T)
 
-    // command performs only if cursor next item is not null
-    // move cursor to the next node
-    fun right() {
-        cursor.next?.let {
-            cursor = it
-            rightStatus = CommandStatus.OK
-            return
-        }
-        rightStatus = CommandStatus.ERR
-    }
+    // precondition: linked list is not empty
+    // postcondition: item of cursor removed, cursor was set to previous item if exist, otherwise to the next
+    abstract fun remove()
 
-    // command performs only if cursor initialized
-    // get current cursor value
-    fun get(): T {
-        return cursor.value
-    }
+    // postcondition: linked list became empty
+    abstract fun clear()
 
-    // command performs only if cursor initialized
-    fun putRight(value: T) {
-        cursor.next = Node(value)
-    }
+    // postcondition: tail was set to new added item
+    abstract fun addTail(item: T)
 
-    // command performs only if cursor initialized
-    fun putLeft(value: T) {
-        cursor.prev = Node(value)
-    }
+    // precondition: linked list is not empty
+    // postcondition: cursor item replaced by new added item
+    abstract fun replace(item: T)
 
-    // command performs only if cursor initialized and has next or prev node
-    fun remove() {
-        cursor.next?.let {
-            it.prev = cursor.prev
-        }
-        cursor.prev?.let {
-            it.next = cursor.next
-        }
-        cursor.next?.let {
-            cursor = it
-            return
-        }
-        cursor.prev?.let {
-            cursor = it
-            return
-        }
-    }
+    // precondition: item exist to the right of cursor
+    // postcondition: cursor was set to the item
+    abstract fun find(item: T)
 
-    // command performs only if cursor initialized
-    fun replace(newValue: T) {
-        cursor.value = newValue
-    }
+    // postcondition: all items which equal to argument item were deleted
+    abstract fun removeAll(item: T)
 
-    // command performs only if cursor initialized
-    fun find(value: T) {
-        var node = cursor.next
-        while (node != null) {
-            if (node.value == value) {
-                cursor = node
-                return
-            }
-            node = node.next
-        }
-    }
 
-    // remove all node which contain value
-    fun removeAll(value: T) {
-        var node = head
-        while (node != null) {
-            if (node.value == value) {
-                // head contains value to remove
-                if (node == head) {
-                    head = head!!.next
-                    if (head!!.next != null) {
-                        head!!.next!!.prev = null
-                    }
-                }
-                // node is in center
-                val nodePrev = node.prev
-                val nodeNext = node.next
-                if (nodePrev != null) {
-                    nodePrev.next = node.next
-                }
-                if (nodeNext != null) {
-                    nodeNext.prev = nodePrev
-                }
-            }
-            node = node.next
-        }
-    }
+    // precondition: linked list is not empty
+    abstract fun get(): T
 
-    fun clear() {
-        tail = null
-        head = null
-        cursorStatus = CursorStatus.NOT_INITIALIZED
-        headStatus = CommandStatus.NEVER_PERFORMED
-        tailStatus = CommandStatus.NEVER_PERFORMED
-        rightStatus = CommandStatus.NEVER_PERFORMED
-    }
+    abstract fun size(): Int
 
-    // put node to the end of list
-    fun addTail(newNode: Node<T>) {
-        // list is empty
-        if (head == null) {
-            head = newNode
-            cursor = head!!
-            cursorStatus = CursorStatus.INITIALIZED
-            return
-        }
-        // list has only one item
-        if (tail == null) {
-            tail = newNode
-            head!!.next = tail
-            tail!!.prev = head
-            return
-        }
-        // list has head and tail
-        tail!!.next = newNode
-        newNode.prev = tail
-        tail = newNode
-    }
+    abstract fun isHead(): Boolean
 
-    // command performs only if cursor initialized
-    fun isHead(): Boolean {
-        return cursor == head
-    }
+    abstract fun isTail(): Boolean
 
-    // command performs only if cursor initialized
-    fun isTail(): Boolean {
-        return cursor == tail
-    }
+    abstract fun isValue(): Boolean
 
-    fun isCursor(): Boolean {
-        return cursorStatus != CursorStatus.INITIALIZED
-    }
-    
-    fun size(): Int {
-        var size = 0
-        var node = head
-        while(node != null){
-            size++
-            node = node.next
-        }
-        return size
-    }
+    abstract fun getHeadStatus(): Int
+
+    abstract fun getTailStatus(): Int
+
+    abstract fun getRightStatus(): Int
+
+    abstract fun getPutRightStatus(): Int
+
+    abstract fun getPutLeftStatus(): Int
+
+    abstract fun getRemoveStatus(): Int
+
+    abstract fun getReplaceStatus(): Int
+
+    abstract fun getFindStatus(): Int
 }
