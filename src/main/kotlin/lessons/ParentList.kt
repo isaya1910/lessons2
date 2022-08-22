@@ -1,190 +1,290 @@
 
-abstract class ParentList<T>() {
-    private var head: Node<T>? = null
-    private var tail: Node<T>? = null
-    private lateinit var cursor: Node<T>
+abstract class ParentList<T> {
 
-    // запросы статусов
-    var headStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
-    var tailStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
-    var rightStatus: CommandStatus = CommandStatus.NEVER_PERFORMED
-
-    // пустословие: возможные значения статусов
-    enum class CommandStatus {
-        OK,
-        ERR,
-        NEVER_PERFORMED
+    companion object {
+        const val HEAD_NIL = 0
+        const val HEAD_OK = 1
+        const val HEAD_ERR = 2
+        const val TAIL_NIL = 0
+        const val TAIL_OK = 1
+        const val TAIL_ERR = 2
+        const val RIGHT_NIL = 0
+        const val RIGHT_OK = 1
+        const val RIGHT_ERR = 2
+        const val PUT_RIGHT_NIL = 0
+        const val PUT_RIGHT_OK = 1
+        const val PUT_RIGHT_ERR = 2
+        const val PUT_LEFT_NIL = 0
+        const val PUT_LEFT_OK = 1
+        const val PUT_LEFT_ERR = 2
+        const val ADD_TAIL_NIL = 0
+        const val ADD_TAIL_OK = 1
+        const val ADD_TAIL_ERR = 2
+        const val REMOVE_NIL = 0
+        const val REMOVE_OK = 1
+        const val REMOVE_ERR = 2
+        const val REPLACE_NIL = 0
+        const val REPLACE_OK = 1
+        const val REPLACE_ERR = 2
+        const val FIND_NIL = 0
+        const val FIND_OK = 1
+        const val FIND_ERR = 2
     }
 
-    // команды
-    // предусловие: список не пуст;
-    // постусловие: курсор установлен на первый узел в списке
+    protected class Node<T>(var value: T) {
+        var prev: Node<T>? = null
+        var next: Node<T>? = null
+    }
+
+    protected var head: Node<T>? = null
+    protected var tail: Node<T>? = null
+    protected var cursor: Node<T>? = null
+    protected var size = 0
+    private var headStatus = HEAD_NIL
+    private var tailStatus = TAIL_NIL
+    private var findStatus = FIND_NIL
+    private var rightStatus = RIGHT_NIL
+    protected var putRightStat = PUT_RIGHT_NIL
+    protected var putLeftStat = PUT_LEFT_NIL
+
+    // precondition: linked list is not empty
+    // postcondition: cursor was set to head
     fun head() {
-        head?.let {
-            cursor = it
-            headStatus = CommandStatus.OK
+        if (head == null) {
+            headStatus = HEAD_ERR
             return
         }
-        headStatus = CommandStatus.ERR
+        headStatus = HEAD_OK
+        cursor = head
     }
 
-    // предусловие: список не пуст;
-    // постусловие: курсор установлен на последний узел в списке
+    // precondition: linked list is not empty
+    // postcondition: cursor was set to tail
     fun tail() {
-        tail?.let {
-            cursor = it
-            tailStatus = CommandStatus.OK
+        if (tail == null) {
+            tailStatus = TAIL_ERR
             return
         }
-        tailStatus = CommandStatus.ERR
+        tailStatus = TAIL_OK
+        cursor = tail
     }
 
-    // предусловие: правее курсора есть элемент;
-    // постусловие: курсор сдвинут на один узел вправо
-    fun right() {
-        cursor.next?.let {
-            cursor = it
-            rightStatus = CommandStatus.OK
+    // precondition: cursor is not tail and list is not empty
+    // postcondition: cursor was set to next item
+    open fun right() {
+        if (cursor == null) {
+            rightStatus = RIGHT_ERR
             return
         }
-        rightStatus = CommandStatus.ERR
-    }
-
-    // command performs only if cursor initialized
-    // get current cursor value
-    fun get(): T {
-        return cursor.value
-    }
-
-    // предусловие: список не пуст;
-    // постусловие: следом за текущим узлом добавлен
-    // новый узел с заданным значением
-    fun putRight(value: T) {
-        cursor.next = Node(value)
-    }
-
-    // предусловие: список не пуст;
-    // постусловие: перед текущим узлом добавлен
-    // новый узел с заданным значением
-    fun putLeft(value: T) {
-        cursor.prev = Node(value)
-    }
-
-    // предусловие: список не пуст;
-    // постусловие: текущий узел удалён,
-    // курсор смещён к правому соседу, если он есть,
-    // в противном случае курсор смещён к левому соседу,
-    // если он есть
-    fun remove() {
-        cursor.next?.let {
-            it.prev = cursor.prev
-        }
-        cursor.prev?.let {
-            it.next = cursor.next
-        }
-        cursor.next?.let {
-            cursor = it
+        if (cursor == tail) {
+            rightStatus = RIGHT_ERR
             return
         }
-        cursor.prev?.let {
-            cursor = it
-            return
-        }
+        cursor = cursor!!.next
     }
 
-    // предусловие: список не пуст;
-    // постусловие: значение текущего узла заменено на новое
-    fun replace(newValue: T) {
-        cursor.value = newValue
-    }
+    // precondition: linked list is not empty
+    // postcondition: new item was added next to cursor
+    abstract fun putRight(item: T)
 
-    // постусловие: курсор установлен на следующий узел
-    // с искомым значением, если такой узел найден
-    fun find(value: T) {
-        var node = cursor.next
-        while (node != null) {
-            if (node.value == value) {
-                cursor = node
-                return
-            }
-            node = node.next
-        }
-    }
+    // precondition: linked list is not empty
+    // postcondition: new item was added  before cursor
+    abstract fun putLeft(item: T)
 
-    // постусловие: в списке удалены все узлы с заданным значением
-    fun removeAll(value: T) {
-        var node = head
-        while (node != null) {
-            if (node.value == value) {
-                // head contains value to remove
-                if (node == head) {
-                    head = head!!.next
-                    if (head!!.next != null) {
-                        head!!.next!!.prev = null
-                    }
-                }
-                // node is in center
-                val nodePrev = node.prev
-                val nodeNext = node.next
-                if (nodePrev != null) {
-                    nodePrev.next = node.next
-                }
-                if (nodeNext != null) {
-                    nodeNext.prev = nodePrev
-                }
-            }
-            node = node.next
-        }
-    }
+    // precondition: linked list is not empty
+    // postcondition: item of cursor removed, cursor was set to previous item if exist, otherwise to the next
+    abstract fun remove()
 
-    // постусловие: список очищен от всех элементов
-    fun clear() {
+    // postcondition: linked list became empty
+    open fun clear() {
         tail = null
         head = null
-        headStatus = CommandStatus.NEVER_PERFORMED
-        tailStatus = CommandStatus.NEVER_PERFORMED
-        rightStatus = CommandStatus.NEVER_PERFORMED
+        headStatus = HEAD_NIL
+        tailStatus = TAIL_NIL
+        findStatus = FIND_NIL
+        rightStatus = RIGHT_NIL
+        putRightStat = PUT_RIGHT_NIL
+        putLeftStat = PUT_RIGHT_NIL
     }
 
-    // постусловие: новый узел добавлен в хвост списка
-    fun addTail(newNode: Node<T>) {
-        // list is empty
-        if (head == null) {
-            head = newNode
-            cursor = head!!
-            return
-        }
-        // list has only one item
-        if (tail == null) {
-            tail = newNode
-            head!!.next = tail
-            tail!!.prev = head
-            return
-        }
-        // list has head and tail
-        tail!!.next = newNode
-        newNode.prev = tail
-        tail = newNode
+    // postcondition: tail was set to new added item
+    open fun addTail(item: T) {
+        size++
     }
 
-    // предусловие: список не пуст
+    // precondition: linked list is not empty
+    // postcondition: cursor item replaced by new added item
+    fun replace(item: T) {
+        cursor!!.value = item
+    }
+
+    // postcondition: cursor was set to the item if item was found
+    fun find(item: T) {
+        val it = cursor!!.next
+        while (it != null) {
+            if (it == item) {
+                cursor = it
+                findStatus = FIND_OK
+                return
+            }
+        }
+        findStatus = FIND_ERR
+    }
+
+    // postcondition: all items which equal to argument item were deleted
+    abstract fun removeAll(item: T)
+
+
+    // precondition: linked list is not empty
+    fun get(): T {
+        return cursor!!.value
+    }
+
+    fun size(): Int {
+        return size
+    }
+
     fun isHead(): Boolean {
         return cursor == head
     }
 
-    // предусловие: список не пуст
     fun isTail(): Boolean {
         return cursor == tail
     }
 
-    // пустословие: количество элементов в списке
-    fun size(): Int {
-        var size = 0
-        var node = head
-        while (node != null) {
-            size++
-            node = node.next
-        }
-        return size
+    abstract fun isValue(): Boolean
+
+    fun getHeadStatus(): Int {
+        return headStatus
     }
+
+    fun getTailStatus(): Int {
+        return tailStatus
+    }
+
+    fun getRightStatus(): Int {
+        return rightStatus
+    }
+
+    fun getPutRightStatus(): Int {
+        return putRightStat
+    }
+
+    abstract fun getPutLeftStatus(): Int
+
+    abstract fun getRemoveStatus(): Int
+
+    abstract fun getReplaceStatus(): Int
+
+    abstract fun getFindStatus(): Int
+}
+
+class LinkedList<T> : ParentList<T>() {
+
+
+    override fun right() {
+        super.right()
+        TODO("Not yet implemented")
+    }
+
+    override fun clear() {
+        super.clear()
+        TODO("Not yet implemented")
+    }
+
+    override fun putRight(item: T) {
+        TODO("Not yet implemented")
+    }
+
+    override fun putLeft(item: T) {
+        TODO("Not yet implemented")
+    }
+
+    override fun remove() {
+        TODO("Not yet implemented")
+    }
+
+    override fun removeAll(item: T) {
+        TODO("Not yet implemented")
+    }
+    override fun isValue(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPutLeftStatus(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun getRemoveStatus(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun getReplaceStatus(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun getFindStatus(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun addTail(item: T) {
+        TODO("Not yet implemented")
+    }
+
+}
+
+
+class TwoWayList<T> : ParentList<T>() {
+
+
+    override fun right() {
+        super.right()
+        TODO("Not yet implemented")
+    }
+
+    override fun clear() {
+        super.clear()
+        TODO("Not yet implemented")
+    }
+
+    override fun putRight(item: T) {
+        TODO("Not yet implemented")
+    }
+
+    override fun putLeft(item: T) {
+        TODO("Not yet implemented")
+    }
+
+    override fun remove() {
+        TODO("Not yet implemented")
+    }
+
+    override fun removeAll(item: T) {
+        TODO("Not yet implemented")
+    }
+    override fun isValue(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+
+    override fun getPutLeftStatus(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun getRemoveStatus(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun getReplaceStatus(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun getFindStatus(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun addTail(item: T) {
+        TODO("Not yet implemented")
+    }
+
 }
