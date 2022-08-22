@@ -71,6 +71,7 @@ class Deque<T> : ParentQueue<T>() {
     }
 
     // precondition: queue is not empty
+    // postcondition: last item removed
     fun removeTail() {
         if (list.isEmpty()) {
             removeTailStat = REMOVE_TAIL_ERR
