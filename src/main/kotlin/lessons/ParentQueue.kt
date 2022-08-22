@@ -19,7 +19,7 @@ abstract class ParentQueue<T> {
     }
 
     // precondition: queue is not empty
-    // postcondition: first queue item was removed and returned
+    // postcondition: first queue item was removed
     fun removeFront() {
         if (list.isEmpty()) {
             removeFrontStat = REMOVE_FRONT_ERR
