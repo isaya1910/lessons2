@@ -186,6 +186,10 @@ class LinkedList<T> : ParentList<T>() {
         super.right()
         TODO("Not yet implemented")
     }
+    
+    fun left() {
+        TODO("Not yet implemented")
+    }
 
     override fun clear() {
         super.clear()
