@@ -5,7 +5,7 @@ abstract class Queue<T> {
         const val DEQUEUE_OK = 1
         const val DEQUEUE_ERR = 2
     }
-    protected var dequeuStat = DEQUEUE_NIL
+    protected var dequeueStat = DEQUEUE_NIL
     
     // postcondition: item was added to the end of queue
     abstract fun enqueue(item: T)
@@ -17,7 +17,7 @@ abstract class Queue<T> {
     abstract fun size(): Int
     
     fun getDequeueStatus(): Int {
-        return dequeuStat
+        return dequeueStat
     }
 }
 
@@ -29,9 +29,10 @@ class ExampleQueue<T>: Queue<T>() {
 
     override fun dequeue(): T {
         if (list.isEmpty()) {
-            dequeuStat = DEQUEUE_ERR
+            dequeueStat = DEQUEUE_ERR
             throw Exception("queie is empty")
         }
+        dequeueStat = DEQUEUE_OK
         val item = list.first()
         list.remove(item)
         return item
