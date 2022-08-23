@@ -13,4 +13,6 @@ abstract class NativeDictionary <T> {
     abstract fun get(key: String): T
 
     abstract fun getGetStatus(): Int
+    
+    abstract fun getRemoveStatus(): Int
 }
