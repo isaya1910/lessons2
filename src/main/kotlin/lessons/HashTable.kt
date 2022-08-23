@@ -3,7 +3,7 @@ abstract class HashTable <T> {
     // postcondition: new value was inserted
     abstract fun insert(value: T)
 
-    // precondition: value exist in hash tavle
+    // precondition: value exist in hash table
     // postcondition: value was deleleted
     abstract fun remove(value: T)
 
