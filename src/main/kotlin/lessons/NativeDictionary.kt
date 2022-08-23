@@ -1,7 +1,7 @@
 
 abstract class NativeDictionary <T> {
 
-    // postcondition: key value were put into dictionary
+    // postcondition: key value were put into dictionary or value updated if key was existed
     abstract fun put(key: String, value: T)
     
     // precondition: key value should exist
