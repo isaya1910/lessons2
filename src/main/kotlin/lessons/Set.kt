@@ -15,7 +15,7 @@ abstract class HashTable <T> {
     abstract fun getDeleteStatus(): Int
 }
 
-abstract class Set<T>(maxSize: Int): HashTable<T>() {
+abstract class PowerSet<T>(maxSize: Int): HashTable<T>() {
 
     // precondition: set size is less than maxsize
     // postcondition: new item was added
