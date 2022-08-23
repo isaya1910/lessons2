@@ -3,6 +3,10 @@ abstract class NativeDictionary <T> {
 
     // postcondition: key value were put into dictionary
     abstract fun put(key: String, value: T)
+    
+    // precondition: key value should exist
+    // postcondition: key value removed from dictionary
+    abstract fun remove(key: String)
 
     // precondition: key value should exist
     // postcondition: value returned
