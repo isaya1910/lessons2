@@ -10,6 +10,6 @@ abstract class HashTable <T> {
     // return true if value exist
     abstract fun find(value: T): Boolean
 
-    abstract fun getInsertStatus()
-    abstract fun getDeleteStatus()
+    abstract fun getInsertStatus(): Int
+    abstract fun getDeleteStatus(): Int
 }
