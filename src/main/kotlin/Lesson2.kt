@@ -1,48 +1,23 @@
 
-// inheritance example
+// пример специализация класса родителя
 open class User(
     val email: String,
     val firstName: String,
     val secondName: String
-)
+) {
+    open fun fullInfo(){
+        return "$email $firstName $secondName"
+    }
+}
 
 class Student(
     val studentId: String,
     email: String,
     firstName: String,
     secondName: String
-) :
-    User(email, firstName, secondName)
-
-
-
-// composition example
-interface Teacher {
-    fun teach()
-}
-
-class MathTeacher: Teacher {
-    override fun teach() {
-        print("teach math")
-    }
-
-}
-
-class MBAStudent: Teacher by MathTeacher() {
-    fun learn() {
-        print("learn economic")
-    }
-}
-
-// polymorphism example
-open class Money {
-    open fun exchange() {
-        print("do something")
-    }
-}
-
-class Dollar: Money() {
-    override fun exchange() {
-        print("dollar exchange")
+) : User(email, firstName, secondName) {
+    
+    override fun fullInfo() {
+        return "$email %firstName $secondName userId:$studentId"
     }
 }
