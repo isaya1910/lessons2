@@ -21,4 +21,16 @@ fun main() {
     val f15Plane: Plane = F15Plane()
     // динамическое связывание: base speed:1600
     f15Plane.showSpeed()
+    
+    val planes = mutableListOf<Plane>()
+    
+    
+    (1 .. 5).forEach {
+        planes.add(F15Plane())
+    }
+    
+    // ковариантность
+    planes.forEach {
+        it.showSpeed()
+    }
 }
