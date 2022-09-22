@@ -22,7 +22,7 @@ class General {
     }
     
     // в Котлин будет вызвано исключение при не совместимости типов
-    fun <T1, T2> assignmentAttempt(target: T1): T2 {
+    fun <T1: Any, T2: Any> assignmentAttempt(target: T1): T2 {
         return target as T2
     }
 
