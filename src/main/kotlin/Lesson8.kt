@@ -20,6 +20,11 @@ class General {
     fun getType(): String {
         return this.javaClass.name
     }
+    
+    // в Котлин будет вызвано исключение при не совместимости типов
+    fun <T1, T2> assignmentAttempt(target: T1): T2 {
+        return target as T2
+    }
 
     inline fun <reified T> isType(): Boolean {
         return this is T
