@@ -1,5 +1,5 @@
-// Снизил ассимтотическую сложность в ужасно написанной функции в легаси коде убрав else-ы
-/*
+1. Снизил ассимтотическую сложность в ужасно написанной функции в легаси коде убрав else-ы, по хорошему тут дальше надо все переписывать, но это легаси((
+
    Как было:
    private suspend fun buildContent() {
         val workoutData = trainExercisesUseCase.getNonTrackingWorkoutData()
@@ -108,5 +108,154 @@
             }
         }
     }
-*/
+
+
+2. Заметно улучлил логику вьюхи используя полиморфизм:
+Как было:
+   OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun GSTrainTrackingSetRow(
+    isDarkTheme: Boolean,
+    modifier: Modifier = Modifier,
+    set: TrackingSet,
+    setIndex: Int,
+    bringIntoViewRequester: BringIntoViewRequester,
+    onExerciseTickBoxClicked: (
+        setIdentifier: SetIdentifier,
+        isComplete: Boolean
+    ) -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(contentIndentHalf),
+        verticalAlignment = Alignment.Bottom,
+        modifier = modifier
+    ) {
+        set.inputTypes.forEach { inputType ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.weight(0.99f)
+            ) {
+                if (setIndex == 0) {
+                    Text(
+                        text = buildInputTitle(inputType),
+                        color = if (isDarkTheme) GymsharkWhiteDark else GymsharkBlackB,
+                        fontFamily = Roboto,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        lineHeight = 19.sp
+                    )
+                }
+
+                GSExerciseTextField(
+                    isDarkTheme = isDarkTheme,
+                    value = "",
+                    hintText = when (inputType) {
+                        is TrackingInputType.Time -> TrainInputFormatter.formatTimeInput(inputType.hintText.removeSuffix(".0"))
+                        else -> inputType.hintText
+                    },
+                    isComplete = set.isComplete,
+                    bringIntoViewRequester = bringIntoViewRequester,
+                    forceCursorToEnd = inputType is TrackingInputType.Time,
+                    isValid = {
+                         when (inputType) {
+                            is TrackingInputType.Reps -> TrainInputValidator.isRepValueValid(it)
+                            is TrackingInputType.Time -> TrainInputValidator.isTimeValueValid(it)
+                            else -> true
+                        }
+                    },
+                    maxLength = {
+                        when (inputType) {
+                            is TrackingInputType.Reps -> TrainInputValidator.isRepValueValid(it)
+                            is TrackingInputType.Time -> TrainInputValidator.isTimeValueValid(it)
+                            else -> true
+                        }
+                        
+                    }
+                    onChangeFormatter = {
+                        when (inputType) {
+                            is TrackingInputType.Reps -> TrainInputFormatter.formatRepsInput(it)
+                            is TrackingInputType.Time -> TrainInputFormatter.formatInputTimeOnCommitted(it)
+                            else -> it
+                        }
+                    },
+                    onCommittedFormatter = {
+                        inputType.format(it)
+                    },
+                    onValueCommitted = { }
+                )
+            }
+        }
+        GSTickBox(
+            isDarkTheme = isDarkTheme,
+            isChecked = set.isComplete,
+            onTickClicked = { onExerciseTickBoxClicked(set.identifier, !set.isComplete) },
+        )
+    }
+}
+
+Как стало:
+   
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun GSTrainTrackingSetRow(
+    isDarkTheme: Boolean,
+    modifier: Modifier = Modifier,
+    set: TrackingSet,
+    setIndex: Int,
+    bringIntoViewRequester: BringIntoViewRequester,
+    onExerciseTickBoxClicked: (
+        setIdentifier: SetIdentifier,
+        isComplete: Boolean
+    ) -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(contentIndentHalf),
+        verticalAlignment = Alignment.Bottom,
+        modifier = modifier
+    ) {
+        val isComplete = remember {
+            mutableStateOf(set.isComplete)
+        }
+        set.inputTypes.forEach { inputType ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.weight(0.99f)
+            ) {
+                if (setIndex == 0) {
+                    Text(
+                        text = buildInputTitle(inputType),
+                        color = if (isDarkTheme) GymsharkWhiteDark else GymsharkBlackB,
+                        fontFamily = Roboto,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        lineHeight = 19.sp
+                    )
+                }
+
+                GSExerciseTextField(
+                    isDarkTheme = isDarkTheme,
+                    isCompleteState = isComplete,
+                    bringIntoViewRequester = bringIntoViewRequester,
+                    trainInput = inputType
+                )
+            }
+        }
+        GSTickBox(
+            isDarkTheme = isDarkTheme,
+            isChecked = isComplete.value,
+            onTickClicked = {
+                set.inputTypes.forEach {
+                    it.format(it.inputState.value.text)
+                }
+                // TODO refactor this in trainViewModel refactoring
+                if (set.inputTypes.filter { it.validate() }.size == set.inputTypes.size) {
+                    isComplete.value = !isComplete.value
+                    onExerciseTickBoxClicked(set.identifier, isComplete.value)
+                }
+            },
+        )
+    }
+}
 
