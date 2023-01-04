@@ -1,0 +1,112 @@
+// Снизил ассимтотическую сложность в ужасно написанной функции в легаси коде убрав else-ы
+/*
+   Как было:
+   private suspend fun buildContent() {
+        val workoutData = trainExercisesUseCase.getNonTrackingWorkoutData()
+        val workoutTrackingData = trainExercisesUseCase.getTrackingWorkoutData()
+        val restTimerData = restTimerUseCase.getRestTimerConfigurationData()
+        val trayState = workoutPropertiesUseCase.getBottomSheetState()
+        val isTrackingEnabled = workoutPropertiesUseCase.isTrackingViewProperty
+        val weightUnitTitle = withContext(Dispatchers.Main) {
+            legacySettingsHelper.getWeightUnit()
+        }
+        if (workoutData != null && workoutTrackingData != null) {
+            if (restTimerData.isRestTimerRunning) {
+                setState(
+                    TrainState.Content(
+                        isTrackingSetRep = isTrackingEnabled,
+                        listOfNonTrackingSections = workoutData.first,
+                        listOfTrackingSections = workoutTrackingData.first,
+                        popupDialogState = GSTrainPopupState.Empty,
+                        weightUnitShortTitle = weightUnitTitle
+                    )
+                )
+                _restTimerConfigState.value = restTimerData
+                _bottomSheetState.value = TrainBottomSheetState.RestTimer()
+
+                if (trayState.isOpen && trayState.bottomSheetState == TrainBottomSheetState.RestTimer.name) {
+                    startAndObserveCountdownTimer(TrainRestTimerEvents.RestTimerStarted())
+                } else {
+                    startAndObserveCountdownTimer(TrainRestTimerEvents.ResumeInProgressRestTimer())
+                }
+            } else if (trayState.isOpen && trayState.bottomSheetState == TrainBottomSheetState.WorkoutSettings.name) {
+                setState(
+                    TrainState.Content(
+                        isTrackingSetRep = isTrackingEnabled,
+                        listOfNonTrackingSections = workoutData.first,
+                        listOfTrackingSections = workoutTrackingData.first,
+                        popupDialogState = GSTrainPopupState.Empty,
+                        weightUnitShortTitle = weightUnitTitle
+                    )
+                )
+                _bottomSheetState.value = TrainBottomSheetState.WorkoutSettings()
+            } else {
+                val shouldShowHighlightModel = workoutPropertiesUseCase.shouldShowHighlightModel()
+                val bottomSheetStateValue = if (shouldShowHighlightModel) TrainBottomSheetState.HighlightModal() else TrainBottomSheetState.Idle()
+
+                _bottomSheetState.value = bottomSheetStateValue
+                setState(
+                    TrainState.Content(
+                        isTrackingSetRep = isTrackingEnabled,
+                        listOfNonTrackingSections = workoutData.first,
+                        listOfTrackingSections = workoutTrackingData.first,
+                        popupDialogState = GSTrainPopupState.Empty,
+                        weightUnitShortTitle = weightUnitTitle
+                    )
+                )
+            }
+
+            uiInteractionBaseTrackingProperties = workoutData.second
+        } else setState(TrainState.Error())
+    }
+    
+    Как стало:
+      private suspend fun buildContent() {
+        val workoutData = trainExercisesUseCase.getNonTrackingWorkoutData()
+        val workoutTrackingData = trainExercisesUseCase.getTrackingWorkoutData()
+        val restTimerData = restTimerUseCase.getRestTimerConfigurationData()
+        val trayState = workoutPropertiesUseCase.getBottomSheetState()
+        val isTrackingEnabled = workoutPropertiesUseCase.isTrackingViewProperty
+        val weightUnitTitle = withContext(Dispatchers.Main) {
+            legacySettingsHelper.getWeightUnit()
+        }
+
+        if (workoutData == null && workoutTrackingData == null) {
+            setState(TrainState.Error())
+            return
+        }
+
+        uiInteractionBaseTrackingProperties = workoutData!!.second
+
+        setState(
+            TrainState.Content(
+                isTrackingSetRep = isTrackingEnabled,
+                listOfNonTrackingSections = workoutData.first,
+                listOfTrackingSections = workoutTrackingData!!.first,
+                popupDialogState = GSTrainPopupState.Empty,
+                weightUnitShortTitle = weightUnitTitle
+            )
+        )
+        when {
+            restTimerData.isRestTimerRunning -> {
+                _restTimerConfigState.value = restTimerData
+                _bottomSheetState.value = TrainBottomSheetState.RestTimer()
+
+                if (trayState.isOpen && trayState.bottomSheetState == TrainBottomSheetState.RestTimer.name) {
+                    startAndObserveCountdownTimer(TrainRestTimerEvents.RestTimerStarted())
+                    return
+                }
+                startAndObserveCountdownTimer(TrainRestTimerEvents.ResumeInProgressRestTimer())
+            }
+            trayState.isOpen && trayState.bottomSheetState == TrainBottomSheetState.WorkoutSettings.name -> {
+                _bottomSheetState.value = TrainBottomSheetState.WorkoutSettings()
+            }
+            else-> {
+                val shouldShowHighlightModel = workoutPropertiesUseCase.shouldShowHighlightModel()
+                val bottomSheetStateValue = if (shouldShowHighlightModel) TrainBottomSheetState.HighlightModal() else TrainBottomSheetState.Idle()
+                _bottomSheetState.value = bottomSheetStateValue
+            }
+        }
+    }
+*/
+
