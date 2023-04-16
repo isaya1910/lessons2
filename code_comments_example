@@ -1,0 +1,125 @@
+Участок кода #1
+/*
+	SalesManagerRepository responsible to provide all data and data operations related to SalesManager
+	Also contains Statistic interface, which gives all statistic related to SalesManager
+*/
+type SalesManagerRepository interface {
+	SaveSale(salesDate time.Time, amount sale.SaleAmount, saleTypeId sale.SaleTypeId) error
+	statistic.Statistic
+}
+
+/*
+	SalesManagerRepository implementation for real db data
+*/
+type PostgresSalesManagerRepository struct {
+	sm      entities.SalesManager
+	str     sale.SaleTypeRepository
+	ctx     context.Context
+	querier generated.Querier
+}
+
+func (p PostgresSalesManagerRepository) SaveSale(salesDate time.Time, amount sale.SaleAmount, saleTypeId sale.SaleTypeId) error {
+	params := generated.AddSaleOrReplaceParams{
+		SalesManagerID: int32(p.sm.Id),
+		Date:           salesDate,
+		Amount:         amount.Amount,
+		SaleTypeID:     int32(saleTypeId),
+	}
+
+	return p.querier.AddSaleOrReplace(p.ctx, params)
+}
+
+func (p *PostgresSalesManagerRepository) ProvideSums(from time.Time, to time.Time) (*statistic.SaleSumByType, error) {
+	arg := generated.GetSalesManagerSumsByTypeParams{
+		Date:   from,
+		Date_2: to,
+		ID:     int32(p.sm.Id),
+	}
+	data, err := p.querier.GetSalesManagerSumsByType(p.ctx, arg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := p.mapSalesSumsByType(data)
+	return &result, err
+}
+
+
+ Участок кода #2
+
+
+// TokenService responsible for conversion sensitive user data into secure view
+type TokenService interface {
+	GenerateToken(user *entities.User) (Token, error)
+}
+
+// PasetoTokenService implementats TokenService by using Paseto specification
+type PasetoTokenService struct {
+	encryptionKey *[]byte
+}
+
+func (ts *PasetoTokenService) GenerateToken(user *UserTokenData) (Token, error) {
+	v2 := paseto.NewV2()
+
+	jsonToken := paseto.JSONToken{}
+	jsonToken.Set("id", fmt.Sprintf("%d", user.id))
+	jsonToken.Set("email", user.email)
+	jsonToken.Set("first_name", user.firstName)
+	jsonToken.Set("last_name", user.lastName)
+
+	footer := map[string]interface{}{
+		"issued_at": time.Now(),
+	}
+
+	tokenString, err := v2.Encrypt(*ts.encryptionKey, jsonToken, footer)
+	if err != nil {
+		return "", err
+	}
+	return Token(tokenString), nil
+}
+
+
+Участок кода #3
+
+	Period responsible for store time period in useful format and converts it into
+	standard go time periods
+*/
+type Period interface {
+	ConvertToTime() (time.Time, time.Time)
+}
+
+// MonthPeriod Period implementation for monthly period
+type MonthPeriod struct {
+	MonthNumber int
+	Year        int
+}
+
+func (m *MonthPeriod) ConvertToTime() (time.Time, time.Time) {
+	from := time.Date(m.Year, time.Month(m.MonthNumber), 1, 0, 0, 0, 0, time.UTC)
+	to := from.AddDate(0, 1, -1)
+	return from, to
+}
+
+/*
+	WeekPeriod Period implementation for weekly related period
+	Precondition: WeekNumber should be from 1 to 53
+*/
+type WeekPeriod struct {
+	WeekNumber int
+	Year       int
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
