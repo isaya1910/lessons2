@@ -1,0 +1,173 @@
+
+ Фича #1: Авторизация
+ В первую очередь я описал себе три свойства своего сервиса:
+  1. Проверка что пользователь существует
+  2. Проверка корректности отправленного пароля
+  3. Возврат пользователя либо ошибки 
+ На основе этих свойств я сформировал эти test cases:
+  1 Test case когда creadentials валидны. Сервис авторизации должен вернуть User без ошибок.
+  2 Test case когда пароль не валиден, Сервис должен вернуть ошибку.
+  3 Test case когда пользователь был не найдет
+
+
+func TestAuthorizationService(t *testing.T) {
+	encKey := []byte("YELLOW SUBMARINE, BLACK WIZARDRY")
+
+	pEncryptor := entities.Base64Encryptor{
+		EncKey: encKey,
+	}
+
+	testPassword, err := entities.NewPassword("testPassword", pEncryptor)
+	require.NoError(t, err)
+	testCases := []struct {
+		name           string
+		userRepository *UserRepositoryStub
+		loginBody      LoginBody
+		assert         func(user *entities.User, err error)
+		// Add more fields if necessary, depending on your test case
+	}{
+		{
+			name: "Test case user exist",
+			userRepository: &UserRepositoryStub{
+				GetUserByEmailFn: func(email entities.Email) (*entities.User, error) {
+					return &entities.User{
+						Email:    "test@gmail.com",
+						Password: *testPassword,
+					}, nil
+				},
+				ChangePasswordFn: func(email entities.Email, password entities.Password) error {
+					return nil
+				},
+			},
+			loginBody: LoginBody{
+				Email:    "test@gmail.com",
+				Password: "testPassword",
+			},
+			assert: func(user *entities.User, err error) {
+				require.NoError(t, err)
+				require.NotNil(t, user)
+			},
+		},
+		{
+			name: "Test case password doesnt not match",
+			userRepository: &UserRepositoryStub{
+				GetUserByEmailFn: func(email entities.Email) (*entities.User, error) {
+					return &entities.User{
+						Email:    "test@gmail.com",
+						Password: *testPassword,
+					}, nil
+				},
+				ChangePasswordFn: func(email entities.Email, password entities.Password) error {
+					return nil
+				},
+			},
+			loginBody: LoginBody{
+				Email:    "test@gmail.com",
+				Password: "wrong password",
+			},
+			assert: func(user *entities.User, err error) {
+				require.Error(t, err)
+				require.Nil(t, user)
+			},
+		},
+		{
+			name: "Test case user not found",
+			userRepository: &UserRepositoryStub{
+				GetUserByEmailFn: func(email entities.Email) (*entities.User, error) {
+					return nil, errors.New("not found")
+				},
+				ChangePasswordFn: func(email entities.Email, password entities.Password) error {
+					return nil
+				},
+			},
+			loginBody: LoginBody{
+				Email:    "not_exist@gmail.com",
+				Password: "testPassword",
+			},
+			assert: func(user *entities.User, err error) {
+				require.Error(t, err)
+				require.Nil(t, user)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			authService := SafeAuthorizationService{
+				ctx:  nil,
+				repo: tc.userRepository,
+				enc:  pEncryptor,
+			}
+
+			result, err := authService.Login(LoginBody{
+				Email:    tc.loginBody.Email,
+				Password: tc.loginBody.Password,
+			})
+
+			tc.assert(result, err)
+		})
+	}
+}
+
+
+Фича #2
+Code verification Service
+Свойства: 
+  1. пользователем запрашивается код верификации (например для восстановления пароля), на его email отправляется код и сохраняется как то в системе
+  2. пользователь при отправке правильного кода получает токен авторизации
+  3. пользователь при отправке неправильного кода получает ошибку
+
+
+func TestVerificationService(t *testing.T) {
+	// Create a test user
+	user := entities.User{
+		Id:    1,
+		Email: "test@example.com",
+	}
+
+	// Initialize the test recovery code sender
+	testRCS := &TestRecoveryCodeSender{
+		codesSent: make([]recoveryCode, 0),
+	}
+
+	// Create a password recovery service with the test recovery code sender and generator
+	prs := PasswordRecoveryService{
+		rcs: testRCS,
+		prg: TestPasswordRecoveryCodeGenerator{},
+	}
+
+	// Test sending a recovery code
+	err := prs.SendRecoveryCode(user)
+	require.NoError(t, err)
+
+	// Test verifying wrong code
+	wrongCode := testRCS.codesSent[0] + 1
+	valid := prs.VerifyRecoveryCode(user, wrongCode)
+	require.False(t, valid)
+
+	// Test verifying the recovery code
+	code := testRCS.codesSent[0]
+	valid = prs.VerifyRecoveryCode(user, code)
+
+	require.True(t, valid)
+
+	// Test verifying the recovery code again, it should be marked as used and invalid
+	valid = prs.VerifyRecoveryCode(user, code)
+	require.False(t, valid)
+
+	// Test expiration by setting the expiration to the past and verifying the recovery code
+	recoveryCodes.Store(user.Id, recovery{
+		Code:       code,
+		Expiration: time.Now().Add(-1 * time.Hour),
+		Used:       false,
+	})
+
+	valid = prs.VerifyRecoveryCode(user, code)
+
+	require.False(t, valid)
+}
+
+
+
+
+
