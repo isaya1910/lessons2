@@ -1,0 +1,57 @@
+ //Visitor патерн оказался очень удобным в использовании и красивым паттерном. 
+ //У меня есть сервис который возвращает список менеджеров. Нужно сделать различные запросы которые возвращают списки менеджеров по различным критериям.
+ //Вначале был такой сервис: 
+
+
+type SalesManagerService interface {
+	SaveSale(sale sale.Sale) error
+	statistic.Statistic
+	ProvideRankedManagers(from time.Time, to time.Time, page int, size int) (error, *entities.SalesManagers)
+  ProvideBranchManagers(branchId BranchId) (error, *entities.SalesManagers)
+}
+
+//Как мы видим у него были методы делающие по смыслу одно и тоже (возращение списка пользователей) но по разным критериям.
+//Я решеил переписать это использую Visitor.
+
+type SalesManagerService interface {
+	SaveSale(sale sale.Sale) error
+	statistic.Statistic
+	ProvideManagers(visitor salesManagerVisitor) (error, *entities.SalesManagers)
+}
+
+type DBSalesManagerService struct {
+	salesManager entities.SalesManager
+	repo         repository.SalesManagerRepository
+}
+
+type salesManagerVisitor interface {
+	provideManagers() *entities.SalesManagers
+}
+
+func (dbs DBSalesManagerService) ProvideManagers(visitor salesManagerVisitor) *entities.SalesManagers {
+	return visitor.provideManagers()
+}
+
+type rankedSalesManagersVisitor struct {
+	entities.SalesManagers
+	entities2.Period
+	repo repository.SalesManagerRepository
+	page int32
+	size int32
+}
+ 
+type branchSalesManagersVisitor struct {
+	branchId entities3.BranchId 
+	repo repository.SalesManagerRepository
+}
+
+func (rv rankedSalesManagersVisitor) provideManagers() (*entities.SalesManagers, error) {
+	from, to := rv.Period.ConvertToTime()
+	return rv.repo.ProvideRankedSalesManagersList(from, to, rv.size, rv.page)
+}
+
+func (bv branchSalesManagersVisitor) provideManagers() (*entities.SalesManagers, error) {
+	return bv.repo.ProvideBranchSalesManagers(bv.branchId)
+}
+
+//Как мы видим каждый визитор инкапсулирует нужные свойства и поведение, и я могу давать различные свойства своему сервису не меняя в нем самом ничего!!!
