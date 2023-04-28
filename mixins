@@ -1,0 +1,40 @@
+Риализовывать Mixin-ы в go наверное удобнее всего
+
+Например у меня есть два интерфейса которые являются частью сервиса авторизации
+
+type CodeSender interface {
+	SendRecoveryCode(phone entities.Phone, code entities.OtpCode) error
+}
+
+type RecoveryCodeGenerator interface {
+	GenerateRecoveryCode() (entities.OtpCode, error)
+}
+
+есть структуры которая реализует эти два интерфейса
+type RecoveryService struct {
+	CodeSender
+	RecoveryCodeGenerator
+}
+
+
+в данном случае я даю ему функциональность  двух миксинов
+func NewRecoveryService() RecoveryService {
+	return RecoveryService{
+		FourDigitsRecoveryCodeGenerator{},
+		TestPasswordRecoveryCodeGenerator{},
+	}
+}
+
+как мы видим внутри этой функции я использую свойства миксинов в своем сервисе как свои собственные
+func (p RecoveryService) GenerateSendRecoveryCode(user entities.User) (*entities.OtpCode, error) {
+	recoveryCode, err := p.GenerateRecoveryCode()
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &recoveryCode, p.SendRecoveryCode(user.Phone, recoveryCode)
+}
