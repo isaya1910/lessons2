@@ -1,0 +1,54 @@
+1.1 У себя в коде я таких методов не нашел
+1.2 Уже давно не пишу такой код, так и не нашел пример
+1.3 Был такой метод:
+
+func (ts PasetoTokenService) GenerateToken(id int32, firstName string, lastName string, emailString string, phone string) (Token, error) 
+
+создал такую структуру:
+
+type UserTokenData struct {
+	Id        int32
+	FirstName string
+	LastName  string
+	Email     string
+	Phone     string
+}
+
+func (ts PasetoTokenService) GenerateToken(user *UserTokenData) (Token, error) {
+}
+1.4 У меня были helper функции для работы с временными периодами, По сути они делали одно и тоже брали какие то входные параметры, 
+например номер месяца или недели и возвращали start и end даты данного периода.
+
+
+func (year int, month int) GetMonthStartEndDate() (time.Time, time.Time) {
+	from := time.Date(int(m.Year), time.Month(m.MonthNumber), 1, 0, 0, 0, 0, time.UTC)
+	to := from.AddDate(0, 1, -1)
+	return from, to
+}
+
+func GetWeekFirstDate(year int, weekNumber int) (time, time) {
+    januaryFirst := time.Date(w.Year, 1, 1, 0, 0, 0, 0, time.UTC)
+	_, januaryFirstWeek := januaryFirst.ISOWeek()
+
+	if januaryFirstWeek > 1 {
+		// January 1st is in the previous year's last ISO week
+		januaryFirst = time.Date(w.Year, 1, 4, 0, 0, 0, 0, time.UTC)
+	}
+
+	daysToAdd := (w.WeekNumber-1)*7 - int(januaryFirst.Weekday()-time.Monday)
+	mondayDate := januaryFirst.AddDate(0, 0, daysToAdd)
+	return mondayDate, mondayDate.addDate(0,0,6)
+}
+
+
+Их было довольно много для различных типов периодов, я же обьеденил весь этот функционал под один интерфейс:
+
+type Period interface {
+	ConvertToTime() (time.Time, time.Time)
+}
+
+1.5 Такой проблемы не нашел
+
+
+
+
