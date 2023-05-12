@@ -1,0 +1,78 @@
+В проекте на работе я нашел ужасно уродливую функцию с множеством if-else-ов:
+
+fun onSetComplete(set: TrackingSet) {
+       coroutineScope.launch {
+                    // TODO refactor this in trainViewModel refactoring
+                    scrollIfNeededWhenKeyboardIsClosed(set, scrollState, coroutineScope, localDensity)
+
+                    if (isComplete.value) {
+                        isComplete.value = !isComplete.value
+                        set.inputTypes.forEach { it.isComplete = isComplete.value }
+                        onExerciseTickBoxClicked(set.identifier, isComplete.value, set.getInputData())
+                    } else {
+                        set.inputTypes.forEach {
+                            it.format(it.inputState.value.text)
+                        }
+                        if (set.inputTypes.filter { it.validate() }.size == set.inputTypes.size) {
+                            if (KeyboardStateHolder.isKeyboardOpen) {
+                                if (focusRequesterInTheRow.nextFocus == null) {
+                                    focusManager.clearFocus()
+                                    keyBoardController?.hide()
+                                } else {
+                                    if (ExerciseFocusHandlerManager.currentFocusRequester == focusRequesterInTheRow.currentFocus) {
+                                        focusManager.moveFocus(FocusDirection.Down)
+                                    }
+                                }
+                                delay(minAnimationDuration)
+                            }
+                            isComplete.value = !isComplete.value
+                            set.inputTypes.forEach { it.isComplete = isComplete.value }
+                            onExerciseTickBoxClicked(set.identifier, isComplete.value, set.getInputData())
+                        }
+                    }
+                }
+            }
+              
+}
+
+Как мы видим тут ужасно много вложенных if - else- ов, функция делает очень много вещей и проверок.
+
+Для принципа srp я в целом попытался сделать эту функцию более читаемой:
+
+
+для этого я создал метод isSetValid и вынес туда логику валидации.
+
+
+private fun isSetValid(set: TrackingSet): Boolean {
+    return set.inputTypes.all { it.format(it.inputState.value.text); it.validate() }
+}
+
+Далее я попробовал убрать if-else и получилось как то так:
+
+
+  coroutineScope.launch {
+                    // TODO refactor this in trainViewModel refactoring
+                    scrollIfNeededWhenKeyboardIsClosed(set, scrollState, coroutineScope, localDensity)
+                    when {
+                        isComplete.value -> {
+                            isComplete.value = false
+                            set.inputTypes.forEach { it.isComplete = false }
+                            onExerciseTickBoxClicked(set.identifier, false, set.getInputData())
+                        }
+                        isSetValid(set) -> {
+                            if (KeyboardStateHolder.isKeyboardOpen) {
+                                when (ExerciseFocusHandlerManager.currentFocusRequester == focusRequesterInTheRow.currentFocus) {
+                                    true -> focusManager.moveFocus(FocusDirection.Down)
+                                    false -> focusManager.clearFocus()
+                                }
+                            }
+
+                            isComplete.value = true
+                            set.inputTypes.forEach { it.isComplete = true }
+                            onExerciseTickBoxClicked(set.identifier, true, set.getInputData())
+                        }
+                    }
+                }
+
+
+код получился гораздо более читаемым.
