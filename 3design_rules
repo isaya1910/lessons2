@@ -1,0 +1,74 @@
+1. Первое правило особо применимо в случае написания фронтенд логики. Юзер взаимодействует с системой хаотично и при неправильном вызове тех или иных функций 
+могут происходит самые различные баги.
+
+Один из самых распростроненных дизайн компонентов любой дизайн системы это работа с показом и скрытием ProgressBar или по другому LoaderView.
+
+как правило разработчики пишут примерно такой интерфейс:
+
+interface ProgressView  {
+  fun showProgressBar()
+  fun dismissProgressBar()
+}
+
+Проблема заключается в том, что мы можем легко перепутать вызовы функций и получить совершенно не нужное ui состояние.
+
+По правилу лучше сделать так:
+
+fun interface ProgressView {
+  fun toggleProgressBar()
+}
+
+В данном случае корректность работы нашей программы будет зависеть только от реализации данного интерфейса, но никак от порядка вызова и скрытия progressBar.
+
+Такое же улучшение можно сделать для многих UI компонентов. Например показ алертов:
+
+interface AlertView {
+  fun showAlert()
+  fun dismissAlert()
+}
+
+на 
+
+interface AlertView {
+  fun toggleAlert()
+}
+
+2 и 3 Правило я обьеденил в два примера:
+
+В котлин используя data class-ы мы на уровне компилятора запрещаем дефолтные пустые конструкторы.
+
+data class Amount(val amount: Long) {
+    private val numberFormat = NumberFormat.getNumberInstance()
+    fun print(): String {
+        return numberFormat.format(amount)
+    }
+}
+
+так же у меня появилась хорошая привычка 
+оборачивать любые примитивы в свои собственные типы данных.
+Я также начал активней использовать Type Driven Design и метод Don't Validate, Parse. По мне он очень сильно увеличивает надежность системы:
+
+
+Например у меня есть телефон юзера, по сути это обычный String который должен быть провалидирован.
+Но гораздо надежней сделать свой тип данных, задать ему приватный конструктор и создать parse функцию для этого типа.
+
+ Теперь использую этот тип данных в своей системе я могу быть точно уверен что он был проваледирован на этапе ининциализации.
+
+
+@JvmInline
+value class UserPhone private constructor(val value: String) {
+    companion object {
+        fun parse(phoneText: String): Result<UserPhone> {
+            val regex = Regex("^\\+7\\d{10}\$")
+            if (regex.matches(phoneText)) {
+                return Result.success(UserPhone(value = phoneText))
+            }
+            return Result.failure(Throwable("Phone number is not valid"))
+        }
+    }
+}
+
+
+
+
+
