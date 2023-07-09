@@ -1,0 +1,69 @@
+1. Плохой naming
+
+
+есть:
+class Order {
+      // class body
+}
+
+и 
+class Tax {
+  
+}
+
+плохая практика naming-а будет :
+
+getTax(o: Order, t: Tax): Tax {
+  // function body
+}
+
+гораздо лучше:
+
+calculateTax(currentOrder: Order, baseTax: Tax) : Tax {
+  // function body
+}
+
+
+2. Типичная ошибка использования индексов и в целом неправильного использования циклов:
+
+
+
+fun getActiveOrdersSum(orders: List<Order>) {
+    val sum = 0
+    for (i in 0 .. orders.size) {
+        if (orders[i].isActive) {
+          sum += ordrers[i].price
+        }
+    }
+    return sum
+}
+
+Гораздо компактнее выглядит это:
+fun getActiveOrdersSum(orders: List<Order>) {
+  return sum.filter { it.isActive }.sumOff { it.price }
+}
+
+
+3. Один из самых распростроненных примеров не использования грамотной факторизации:
+
+fun loadImages() {
+    viewModelScope.launch {
+        view.showProgress()
+        val result = imageRepository.loadImages()
+        when(result) {
+          // обрабатываем result
+        }
+        view.dismissProgress()
+    }
+}
+ 
+лучше вынести логику показа/скрытия спиннера в функцию:
+
+fun withProgress(action: suspend ()->Unit, view: ProgressView) {
+    view.showProgress()
+    action.invoke()
+    view.dismissProgress()
+}
+
+
+
