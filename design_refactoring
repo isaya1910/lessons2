@@ -1,0 +1,48 @@
+Пример #1
+В первую очередь я бы хотел перейти на functional dependency injection.
+В моем проекте я использую абстракции репозиторий для работы с бд, которые в последствии превратились в довольно
+громоздкие конструкции:
+
+
+type PostRepository interface {
+	CreatePost(postTitle, postBody string, authorId int32, imageUrls []string) error
+	CreateComment(userId int32, postId int32, message string) error
+	GetPostComments(postId int32, pagination Pagination) ([]Comment, error)
+	GetPosts(userId int32, pagination Pagination) ([]Post, error)
+	AddLike(userId int32, postId int32) error
+	DeleteLike(userId int32, postId int32) error
+	IsUserLikedPost(userId int32, postId int32) (bool, error)
+	DeletePost(postId int32) error
+	DeleteComment(commentId int32) error
+}
+
+type CreatePostFunc func(postTitle, postBody string, authorId int32, imageUrls []string) error
+type CreateCommentFunc func(userId, postId int32, message string) error
+type GetPostCommentsFunc func(postId int32, pagination Pagination) ([]Comment, error)
+
+И тд
+
+и уже дальше использовать как:
+
+
+type PostServices struct {
+    CreatePost         CreatePostFunc
+    CreateComment      CreateCommentFunc
+    GetPostComments    GetPostCommentsFunc
+    // ... и тд ...
+}
+
+Здесь есть несколько приемуществ:
+1. Гораздо легче писать unit test-ы. Не нужно создавать stub для такого грамоздкого интерфейса, достаточно сделать легкую имплементацию
+под каждую функцию.
+2. Легче переиспользовать в других модулях
+
+
+Пример #2
+
+Я бы попробовал сделать модуль новостей в виде отдельного микросервиса, который можно было бы легко подключать на любой проект буквально
+просто настроив окружение (например через docker). Сейчас у меня он находится внутри монолита, но в рамках развития 
+бизнеса в моем стороннем проекте, я думаю в будущем возникнет такая необходимость.
+
+
+
