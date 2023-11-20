@@ -38,3 +38,5 @@ func (p RecoveryService) GenerateSendRecoveryCode(user entities.User) (*entities
 
 	return &recoveryCode, p.SendRecoveryCode(user.Phone, recoveryCode)
 }
+
+// Миксины особо удобны если нужно использовать всю мощь композиции, при этом, не увеличивая сам размер кодовой базы
