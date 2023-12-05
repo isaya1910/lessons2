@@ -1,0 +1,80 @@
+1.1 Данный пример в своем коде я не смог найти, но предполагаю что такое может возникнуть у начинающих разрабов которые начинают писать тесты
+
+1.2 Частый пример
+
+func (service s) sendUser() {
+    err := s.repo.sendUser()
+    if err != nil {
+      s.GetUser()
+    }
+}
+
+в случае успешности GetUser вызовит SaveUser  это и есть классический пример длинной цепочки вызовов.
+func (service s) GetUser() {
+  
+}
+
+func (service s) SaveUser() {
+}
+
+лучший способ избежать этого это использовать в функциях возвращаемиый результат и использовать метод в котором будут использоваться эти функции
+
+type service struct {
+    repo repository
+}
+
+func (s service) sendUser() {
+    err := s.repo.sendUser()
+    if err != nil {
+        user, err := s.getUserData()  // Изменено на прямое получение данных пользователя
+        if err != nil {
+            // Обработка ошибки
+            return
+        }
+        // Логика обработки пользователя...
+    }
+}
+
+func (s service) getUserData() (*User, error) {
+    // ... логика для получения данных пользователя
+    return &User{}, nil
+}
+
+// SaveUser остается без изменений
+
+
+1.3 Длинная цепочка параметров:
+
+func NewUser(name, email, address, phone, age, occupation string) *User {
+    // ... логика
+}
+
+лучше всего такие цепочки обьеденять в структурки:
+
+type UserParams struct {
+    Name       string
+    Email      string
+    Address    string
+    Phone      string
+    Age        string
+    Occupation string
+}
+
+func NewUser(params UserParams) *User {
+    // ... логика
+}
+
+
+1.4 Такого примера у меня не нашлось, но часто видел когда разработчики злоупотребляют Utils методами и начинают добавлять туда любую реализацию зачастую 
+повторяющую функционал друг друга.
+
+Поэтому вмечто Utils лучше всего делить на сущности и тогда будет легче видеть где дублируется функционал
+
+1.5 Не нашел у себя такого примера но видел такое:
+
+func (db *Database) GetUser(id int) (*User, error, status string) {
+    // ... логика
+    return user, nil, "Success"
+}
+
+в данном случае достаточно возвращать *User, error по которому уже и так будет понятен статус
